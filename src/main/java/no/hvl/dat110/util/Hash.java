@@ -63,14 +63,17 @@ public class Hash {
 	public static int bitSize() {
 		// find the digest length
 
+		int digestlen = 0;
+		MessageDigest md = null;
+
 		try {
-			MessageDigest md = MessageDigest.getInstance("MD5");
-			int digestlen = md.getDigestLength();
-			return digestlen*8; //konverterer fra bytes til bits
+			 md = MessageDigest.getInstance("MD5");
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
-			return -1;
 		}
+
+		digestlen = md.getDigestLength();
+		return digestlen*8; //konverterer fra bytes til bits
 	}
 	
 	public static String toHex(byte[] digest) {
