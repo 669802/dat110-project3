@@ -42,10 +42,32 @@ public class Util {
 		// The interval (6, 2) using the notation above means; pred = 6 and node = 2
 		// if id = 4, then (6 < 4 <= 2) = false  
 		// if id = 9, then (6 < 9 <= 2) = true
-		
+		/* Fra oppgaveteksen i readme:
+		To use this method to compute (lower <= id < upper), ensure that the calling method increased the upper param by 1.
+		For example, in mod 10, we check whether 9 lies between 6 and 2.
+		It means id = 9, lower = 6 and upper  = 2. (6,2) in mod 10 = {6,7,8,9,0,1,2}.
+		Your logic should return true. Further, we can check if id = 6 lies between (6,2).
+		A correct implementation will return true
+		 */
+
 		// Task: given an identifier, id: check whether pred < id <= node
-		
-		return false;
+		boolean check = false;
+
+		BigInteger modulo = Hash.addressSize();
+
+		if(lower.compareTo(upper)>0) {
+			if(id.compareTo(upper) <= 0){
+				id = id.add(modulo);
+				System.out.println(id);
+			}
+			upper = upper.add(modulo);
+		}
+
+		if ((lower.compareTo(id) <= 0) && (id.compareTo(upper) <= 0)) {
+			check = true;
+		}
+
+		return check;
 
 	}
 	
