@@ -51,10 +51,12 @@ public class Util {
 		 */
 
 		// Task: given an identifier, id: check whether pred < id <= node
+
+
+
+		/*
 		boolean check = false;
-
 		BigInteger modulo = Hash.addressSize();
-
 		if(lower.compareTo(upper)>0) {
 			if(id.compareTo(upper) <= 0){
 				id = id.add(modulo);
@@ -62,12 +64,17 @@ public class Util {
 			}
 			upper = upper.add(modulo);
 		}
-
 		if ((lower.compareTo(id) <= 0) && (id.compareTo(upper) <= 0)) {
 			check = true;
 		}
-
 		return check;
+		 */
+
+		if (lower.compareTo(upper) < 0) {
+			return (id.compareTo(lower) >= 0) && (id.compareTo(upper) <= 0);
+		} else {
+			return (id.compareTo(lower) >= 0 || id.compareTo(upper) <= 0);
+		}
 
 	}
 	

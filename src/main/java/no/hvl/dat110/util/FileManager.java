@@ -58,11 +58,16 @@ public class FileManager {
 	
 	public void createReplicaFiles() {
 	 	/*
-		set a loop where size = numReplicas
-		replicate by adding the index to filename
-		hash the replica
-		store the hash in the replicafiles array.
+		i) set a loop where size = numReplicas
+		ii) replicate by adding the index to filename
+		iii) hash the replica
+		iv) store the hash in the replicafiles array.
 	 	 */
+
+		for(int i = 0; i < Util.numReplicas; i++){
+			replicafiles[i] = Hash.hashOf(filename+i);
+		}
+
 	}
 	
     /**
@@ -71,30 +76,26 @@ public class FileManager {
      * @throws RemoteException 
      */
     public int distributeReplicastoPeers() throws RemoteException {
-    	
-    	// randomly appoint the primary server to this file replicas
-    	Random rnd = new Random(); 							
-    	int index = rnd.nextInt(Util.numReplicas-1);
-    	
-    	int counter = 0;
-	
-    	// Task1: Given a filename, make replicas and distribute them to all active peers such that: pred < replica <= peer
-    	
-    	// Task2: assign a replica as the primary for this file. Hint, see the slide (project 3) on Canvas
-    	
-    	// create replicas of the filename
-    	
-		// iterate over the replicas
-    	
-    	// for each replica, find its successor (peer/node) by performing findSuccessor(replica)
-    	
-    	// call the addKey on the successor and add the replica
-		
-		// implement a logic to decide if this successor should be assigned as the primary for the file
-    	
-    	// call the saveFileContent() on the successor and set isPrimary=true if logic above is true otherwise set isPrimary=false
-    	
-    	// increment counter
+
+		int counter = 0;
+
+		// randomly appoint the primary server to this file replicas
+		Random rnd = new Random();
+		int index = rnd.nextInt(Util.numReplicas-1);
+
+		createReplicaFiles();
+
+		for (int i = 0; i <this.numReplicas; i++) {
+			BigInteger replica = this.replicafiles[i];
+			NodeInterface successor = this.chordnode.findSuccessor(replica);
+			successor.addKey(replica);
+			if (counter == index) {
+				successor.saveFileContent(filename,replica,bytesOfFile,true);
+			} else {
+				successor.saveFileContent(filename,replica,bytesOfFile,false);
+			}
+			counter++;
+		}
 		return counter;
     }
 	
@@ -107,21 +108,21 @@ public class FileManager {
 	public Set<Message> requestActiveNodesForFile(String filename) throws RemoteException {
 
 		this.filename = filename;
-		activeNodesforFile = new HashSet<Message>(); 
+		this.activeNodesforFile = new HashSet<>();
 
-		// Task: Given a filename, find all the peers that hold a copy of this file
-		
-		// generate the N replicas from the filename by calling createReplicaFiles()
-		
-		// iterate over the replicas of the file
-		
-		// for each replica, do findSuccessor(replica) that returns successor s.
-		
-		// get the metadata (Message) of the replica from the successor (i.e., active peer) of the file
-		
-		// save the metadata in the set activeNodesforFile.
-		
-		return activeNodesforFile;
+		for (BigInteger replicafile : this.replicafiles) {
+			NodeInterface fileNode = this.chordnode.findSuccessor(replicafile);
+
+			Message fileMeta = null;
+			if (fileNode != null) {
+				fileMeta = fileNode.getFilesMetadata(replicafile);
+			}
+			if (fileMeta != null) {
+				this.activeNodesforFile.add(fileMeta);
+			}
+		}
+
+		return this.activeNodesforFile;
 	}
 	
 	/**
@@ -131,16 +132,17 @@ public class FileManager {
 	public NodeInterface findPrimaryOfItem() {
 
 		// Task: Given all the active peers of a file (activeNodesforFile()), find which is holding the primary copy
-		
-		// iterate over the activeNodesforFile
-		
-		// for each active peer (saved as Message)
-		
+		// iterate over the activeNodesforFile for each active peer (saved as Message)
 		// use the primaryServer boolean variable contained in the Message class to check if it is the primary or not
-		
 		// return the primary when found (i.e., use Util.getProcessStub to get the stub and return it)
-		
-		return null; 
+
+		for (Message fileMeta : this.activeNodesforFile) {
+			if(fileMeta.isPrimaryServer()) {
+				return Util.getProcessStub(fileMeta.getNodeName(), fileMeta.getPort());
+			}
+		}
+
+		return null;
 	}
 	
     /**
