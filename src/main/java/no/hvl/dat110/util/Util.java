@@ -52,8 +52,6 @@ public class Util {
 
 		// Task: given an identifier, id: check whether pred < id <= node
 
-
-
 		/*
 		boolean check = false;
 		BigInteger modulo = Hash.addressSize();
