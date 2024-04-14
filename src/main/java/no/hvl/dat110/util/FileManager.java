@@ -108,21 +108,23 @@ public class FileManager {
 	public Set<Message> requestActiveNodesForFile(String filename) throws RemoteException {
 
 		this.filename = filename;
-		this.activeNodesforFile = new HashSet<>();
+		activeNodesforFile = new HashSet<Message>();
 
-		for (BigInteger replicafile : this.replicafiles) {
-			NodeInterface fileNode = this.chordnode.findSuccessor(replicafile);
+		// Task: Given a filename, find all the peers that hold a copy of this file
 
-			Message fileMeta = null;
-			if (fileNode != null) {
-				fileMeta = fileNode.getFilesMetadata(replicafile);
-			}
-			if (fileMeta != null) {
-				this.activeNodesforFile.add(fileMeta);
-			}
+		// generate the N replicas from the filename by calling createReplicaFiles()
+		createReplicaFiles();
+
+		// iterate over the replicas of the file
+		for (BigInteger rf : replicafiles) {
+			// for each replica, do findSuccessor(replica) that returns successor s.
+			NodeInterface succ = chordnode.findSuccessor(rf);
+			// get the metadata (Message) of the replica from the successor (i.e., active peer) of the file
+			Message rfMetaData = succ.getFilesMetadata().get(rf);
+			// save the metadata in the set activeNodesforFile.
+			activeNodesforFile.add(rfMetaData);
 		}
-
-		return this.activeNodesforFile;
+		return activeNodesforFile;
 	}
 	
 	/**
@@ -136,13 +138,17 @@ public class FileManager {
 		// use the primaryServer boolean variable contained in the Message class to check if it is the primary or not
 		// return the primary when found (i.e., use Util.getProcessStub to get the stub and return it)
 
-		for (Message fileMeta : this.activeNodesforFile) {
-			if(fileMeta.isPrimaryServer()) {
-				return Util.getProcessStub(fileMeta.getNodeName(), fileMeta.getPort());
+		try {
+			for (Message fileMeta : requestActiveNodesForFile(filename)) {
+				if(fileMeta.isPrimaryServer()) {
+					return Util.getProcessStub(fileMeta.getNodeName(), fileMeta.getPort());
+				}
 			}
+		} catch (RemoteException e){
+			e.printStackTrace();
 		}
-
 		return null;
+
 	}
 	
     /**
